@@ -1,11 +1,11 @@
 # Ticket Management System
 
-A full-stack support ticket management application built as a Full-Stack Developer Technical Assignment. Users can manage their own support tickets, while administrators can manage tickets across the application.
+A full-stack support ticket management application developed as part of a Full-Stack Developer Technical Assignment. Users can manage their own support tickets, while administrators can manage tickets across the application and view registered users. An optional Groq AI assistant summarizes tickets, suggests priorities, and drafts replies.
 
-## Technology Stack
+## 1. Technology Stack
 
 **Frontend**
-- React
+- React 18
 - TypeScript (TSX)
 - Material UI (MUI)
 - React Router
@@ -20,173 +20,341 @@ A full-stack support ticket management application built as a Full-Stack Develop
 - PostgreSQL
 
 **Authentication**
-- JWT
-- PyJWT
+- JWT-based authentication using PyJWT
 - bcrypt password hashing
+- Role-based authorization
 
-## Prerequisites
+**AI Integration**
+- Groq API for ticket summaries, priority suggestions, and suggested replies
 
-Install the following before running the project:
+## 2. Application Features
 
-- Python 3.10 or a compatible version
-- Node.js and npm
-- PostgreSQL
-- Git
+### User
+- Register and log in.
+- Create, view, edit, and delete their own support tickets.
+- Track ticket status.
+- Log out.
 
-## Project Setup
+### Administrator
+- View, create, edit, and delete tickets across the application.
+- View ticket details.
+- Access the registered users list.
 
-### 1. Clone the repository
+### Ticket Management
+
+Each ticket contains a title, description, status, creator reference, creation timestamp, and last-updated timestamp.
+
+Supported statuses:
+- `OPEN`
+- `IN_PROGRESS`
+- `CLOSED`
+
+New tickets always start as `OPEN`. Regular users can access only their own tickets, while administrators can manage tickets across the application.
+
+## 3. Prerequisites
+
+| Tool | Version |
+|---|---|
+| Python | 3.10 or newer |
+| Node.js and npm | Node.js 18 or newer |
+| PostgreSQL | 13 or newer |
+| Git | Required to clone the repository |
+
+## 4. Project Setup
+
+### Step 1: Get the project
 
 ```bash
 git clone <YOUR_GITHUB_REPOSITORY_URL>
 cd <YOUR_PROJECT_FOLDER>
 ```
 
-Replace the placeholders with your actual GitHub repository URL and project folder name.
+Replace the placeholders with your actual repository URL and project directory name.
 
-### 2. Create the database
+If you received the project as a ZIP file, extract it and open the extracted folder.
 
-Create a PostgreSQL database named `ticket_db` using pgAdmin or your PostgreSQL command-line tools.
+### Step 2: Create the PostgreSQL database
 
-Ensure the database credentials in your backend environment configuration match your local PostgreSQL setup.
+Create a database named `ticket_db` using pgAdmin or the PostgreSQL command line.
 
-### 3. Configure environment variables
+Using the command line:
 
-Create `backend/.env` using the environment variables required by the backend.
+```bash
+psql -U postgres -c "CREATE DATABASE ticket_db;"
+```
+
+The backend creates tables automatically when it starts. If the project includes `database/schema.sql`, you can also run:
+
+```bash
+psql -U postgres -d ticket_db -f database/schema.sql
+```
+
+### Step 3: Configure environment variables
+
+Copy `.env.example` to `backend/.env` and update the configuration.
+
+On Windows PowerShell, if `.env.example` is in the project root:
+
+```powershell
+Copy-Item .env.example backend/.env
+```
 
 Example configuration:
 
 ```env
-DATABASE_URL=
-JWT_SECRET_KEY=
+DATABASE_URL=postgresql://postgres:YOUR_DB_PASSWORD@localhost:5432/ticket_db
+JWT_SECRET_KEY=PASTE_A_GENERATED_SECRET_HERE
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 CORS_ORIGINS=http://localhost:5173
+
 ADMIN_NAME=Admin
 ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=
+ADMIN_PASSWORD=ChangeThisAdmin@123
+
+GROQ_API_KEY=
+GROQ_MODEL=openai/gpt-oss-120b
 ```
 
-Fill in the values locally. Use a strong, unique JWT secret and a strong administrator password.
+Use the exact variable names expected by your backend configuration. Set `GROQ_API_KEY` if you want to use the AI assistant.
 
-**Security:** Never commit `.env` files, database passwords, JWT secrets or real credentials to GitHub. Use `.env.example` to document variable names without exposing secrets.
+Generate a secure JWT secret with:
 
-### 4. Run the backend
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
 
-Open a terminal in the project root:
+Copy the generated value into `JWT_SECRET_KEY`.
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET_KEY` | Secret used to sign JWT tokens |
+| `JWT_ALGORITHM` | JWT signing algorithm; normally `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration time |
+| `CORS_ORIGINS` | Allowed frontend origins |
+| `ADMIN_NAME` | Administrator display name |
+| `ADMIN_EMAIL` | Administrator login email |
+| `ADMIN_PASSWORD` | Administrator password used when creating the account |
+| `GROQ_API_KEY` | Optional API key for AI features |
+| `GROQ_MODEL` | Groq model used for AI requests |
+
+**Security:** Keep real credentials and API keys in `backend/.env`. Never commit `.env` files or secrets to GitHub. Use `.env.example` for placeholder values.
+
+Changing the administrator password in `.env` does not automatically update an administrator account that already exists in the database.
+
+### Step 4: Run the backend
+
+Open a terminal at the project root.
+
+**Windows PowerShell**
 
 ```powershell
 cd backend
 python -m venv .venv
-```
-
-On Windows PowerShell:
-
-```powershell
 .\.venv\Scripts\Activate.ps1
-```
-
-Install dependencies and start FastAPI:
-
-```powershell
 python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-API documentation, when the backend is running:
-
-http://localhost:8000/docs
-
-Keep this terminal open while using the application.
-
-### 5. Run the frontend
-
-Open a second terminal from the project root:
+If PowerShell blocks virtual environment activation, run:
 
 ```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+```
+
+Then activate the environment again.
+
+**macOS / Linux**
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+The backend is ready when the terminal indicates that application startup is complete.
+
+- Backend API: `http://localhost:8000`
+- API documentation: `http://localhost:8000/docs`
+- Health check: `http://localhost:8000/api/health`
+
+Keep the backend terminal running.
+
+### Step 5: Run the frontend
+
+Open a second terminal at the project root:
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open the local URL shown by Vite, normally:
+Open the URL shown by Vite, normally:
 
-http://localhost:5173
+`http://localhost:5173`
 
-If the frontend requires an API URL environment variable, configure it using the variable name documented in the frontend environment example, then restart the Vite development server.
+If the backend runs at a different address, configure the frontend API URL using the variable defined in `frontend/.env.example`, then restart the Vite server.
 
-## Application Features
+## 5. Test Login Credentials
 
-The assignment requires the following capabilities:
-
-- User registration and login
-- JWT-based authentication
-- User and administrator roles
-- Ticket creation, listing, viewing, editing and deletion
-- Ticket statuses: `OPEN`, `IN_PROGRESS` and `CLOSED`
-- Users restricted to their own tickets
-- Administrators able to manage all tickets
-- Administrator access to the user list
-- Frontend and backend input validation
-- PostgreSQL storage
-
-Verify each feature in the implementation before treating it as complete.
-
-## API Endpoints
-
-The assignment specifies these minimum endpoints:
-
-| Method | Endpoint | Purpose |
+| Role | Email | Password |
 |---|---|---|
-| POST | `/api/auth/register` | Register a user |
-| POST | `/api/auth/login` | Authenticate a user |
-| POST | `/api/tickets` | Create a ticket |
-| GET | `/api/tickets` | List tickets allowed for the current user |
-| GET | `/api/tickets/{id}` | Retrieve ticket details |
-| PUT | `/api/tickets/{id}` | Update a ticket |
-| DELETE | `/api/tickets/{id}` | Delete a ticket |
-| GET | `/api/users` | List users for administrators |
+| Administrator | `admin@example.com` | `ChangeThisAdmin@123` |
+| Regular user | Register through the **Register** page | Your chosen password |
 
-The actual implementation determines which endpoints are available. Check the live API documentation at `/docs` before relying on this list.
+The administrator credentials must match the account configured in your running application. The administrator is created from the environment configuration when the account does not already exist.
 
-## Database
+Regular users can register through the application.
 
-The application uses PostgreSQL. The current local database includes `users` and `tickets` tables.
+## 6. API Endpoints
 
-Ticket records should contain a title, description, status, creator reference, creation timestamp and update timestamp. User records should include a unique email, role and securely hashed password.
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | Public | Register a new user |
+| POST | `/api/auth/login` | Public | Authenticate and receive a JWT |
+| GET | `/api/auth/me` | Authenticated | Get current user details |
+| POST | `/api/tickets` | Authenticated | Create a ticket |
+| GET | `/api/tickets` | Authenticated | List accessible tickets |
+| GET | `/api/tickets/{ticket_id}` | Owner or admin | Get ticket details |
+| PUT | `/api/tickets/{ticket_id}` | Owner or admin | Update a ticket |
+| DELETE | `/api/tickets/{ticket_id}` | Owner or admin | Delete a ticket |
+| GET | `/api/users` | Admin only | List registered users |
+| POST | `/api/ai/tickets/{ticket_id}/assist` | Owner or admin | Generate AI assistance |
+| GET | `/api/health` | Public | Check backend health |
 
-## Project Structure
+Protected endpoints require a valid JWT access token in the request header:
+
+```http
+Authorization: Bearer <token>
+```
+
+Refer to `/docs` for the request and response schemas.
+
+## 7. Database Design
+
+The application uses PostgreSQL with SQLAlchemy models.
+
+### Users Table
+
+- `id` — Primary key
+- `name` — User's name
+- `email` — Unique email address
+- `password_hash` — Hashed password
+- `role` — `USER` or `ADMIN`
+- `created_at` — Account creation timestamp
+
+### Tickets Table
+
+- `id` — Primary key
+- `title` — Ticket title
+- `description` — Ticket description
+- `status` — `OPEN`, `IN_PROGRESS`, or `CLOSED`
+- `user_id` — Foreign key referencing the ticket creator
+- `created_at` — Creation timestamp
+- `updated_at` — Last-updated timestamp
+
+The relationship between users and tickets supports ticket ownership and access control.
+
+## 8. AI-Assisted Ticket Support
+
+The application integrates the Groq API to provide optional AI assistance.
+
+On the Ticket Details page, use **Generate insights** to obtain:
+- A short ticket summary
+- A priority suggestion (`LOW`, `MEDIUM`, or `HIGH`)
+- A suggested reply to the ticket author
+
+### Configuration
+
+1. Obtain an API key from [Groq Console](https://console.groq.com/keys).
+2. Set `GROQ_API_KEY` in `backend/.env`.
+3. Configure `GROQ_MODEL` if needed.
+4. Restart the backend.
+
+### How it works
+
+- The frontend calls the application's backend AI endpoint.
+- The backend sends the ticket title, status, and description to Groq.
+- The API key remains on the backend and is not exposed to the browser.
+- The AI response is validated before being displayed.
+- AI service errors are handled with user-friendly messages.
+- AI-generated suggestions are not stored in the database and should be reviewed before use.
+
+The AI assistant requires a valid API key, an available model, and network connectivity. The core ticket management features can operate independently of the AI integration.
+
+## 9. Authentication and Authorization
+
+- Passwords are stored as bcrypt hashes.
+- Login returns a JWT access token.
+- Protected endpoints require valid authentication.
+- Tokens must be valid and unexpired.
+- Newly registered users receive the `USER` role.
+- The administrator is configured through environment variables.
+- Regular users cannot access or modify other users' tickets.
+- Administrator-only endpoints enforce role-based access on the backend.
+- CORS is configured using the allowed origins in the environment configuration.
+
+## 10. Validation and Error Handling
+
+- Required fields and supported ticket statuses are validated.
+- Invalid email addresses and duplicate registrations are handled.
+- Authentication failures and expired sessions are handled.
+- Missing tickets and unauthorized access return appropriate errors.
+- Database, network, and AI service failures are handled.
+- The frontend displays loading indicators, success notifications, and readable error messages.
+
+
+## 11. Project Structure
 
 ```text
 ticket-management-system/
 ├── backend/
 │   ├── app/
-│   └── requirements.txt
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── auth/
+│   │   ├── database/
+│   │   ├── models/
+│   │   ├── routers/
+│   │   ├── schemas/
+│   │   └── services/
+│   ├── requirements.txt
+│   └── requirements-dev.txt
 ├── frontend/
 │   ├── src/
+│   ├── .env.example
 │   ├── package.json
 │   └── package-lock.json
+├── database/
+│   └── schema.sql
 ├── .gitignore
 ├── .env.example
 └── README.md
 ```
 
-This is a simplified overview. Update it to reflect the actual files in the repository.
+This structure describes the expected organization; adjust it if your actual repository differs.
 
-## Testing
 
-Before submission, verify:
+## 12. Troubleshooting
 
-- Registration and login work.
-- Passwords are stored as hashes.
-- Authenticated requests use a valid JWT.
-- Users cannot access or modify another user's tickets.
-- Administrators can manage all tickets and view users.
-- Ticket validation and status values work correctly.
-- The frontend displays useful errors for failed requests.
+| Problem | Possible solution |
+|---|---|
+| Missing environment settings | Create `backend/.env` and configure required values |
+| Invalid JWT secret | Generate a sufficiently long random secret |
+| Database connection failure | Check PostgreSQL status, database name, port, username, and password |
+| Frontend cannot reach backend | Confirm the backend is running and the API URL is correct |
+| CORS error | Add the frontend origin to `CORS_ORIGINS` and restart the backend |
+| AI assistant unavailable | Configure `GROQ_API_KEY` and restart the backend |
+| AI model unavailable | Configure a supported Groq model |
 
-## Limitations
+## 13. Assumptions and Known Limitations
 
-- The application is designed for local development and demonstration.
-- Automated tests are not included, if none have been implemented.
-- Production deployment and additional security hardening are outside the current scope.
+- New tickets always start with `OPEN` status.
+- Users cannot register themselves as administrators.
+- Database tables are created automatically at startup if the application uses SQLAlchemy `create_all`.
+- The application is designed for local development and technical demonstration.
+- Additional production hardening may be needed before public deployment.
