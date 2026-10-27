@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Box, Button, CircularProgress, Link, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import AiAssistPanel from "../components/AiAssistPanel";
 import StatusChip, { STATUS_STYLE } from "../components/StatusChip";
 import { STATUSES, type Ticket, type TicketStatus } from "../types";
 import { formatDateTime } from "../utils";
@@ -99,6 +100,7 @@ export default function TicketDetails() {
           </Stack>
         </Paper>
       </Box>
+      <AiAssistPanel ticketId={ticket.id} />
     </>
   );
 }

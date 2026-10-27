@@ -59,6 +59,12 @@ async function request<T>(path: string, options: RequestInit = {}, auth = true):
   return body as T;
 }
 
+export interface AiAssist {
+  summary: string;
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  suggested_reply: string;
+}
+
 export const api = {
   register: (name: string, email: string, password: string) =>
     request<User>("/api/auth/register", { method: "POST", body: JSON.stringify({ name, email, password }) }, false),
@@ -72,4 +78,5 @@ export const api = {
     request<Ticket>(`/api/tickets/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteTicket: (id: number) => request<void>(`/api/tickets/${id}`, { method: "DELETE" }),
   listUsers: () => request<User[]>("/api/users"),
+  aiAssist: (id: number) => request<AiAssist>(`/api/ai/tickets/${id}/assist`, { method: "POST" }),
 };

@@ -1,12 +1,32 @@
-
+# Frontend dependencies and build output
 node_modules/
 dist/
+
+# Python virtual environments
 .venv/
 venv/
+
+# Python cache files
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Environment variables and secrets
 .env
-.env.local
-*.db
+.env.*
+!.env.example
 **/.env
+**/.env.*
+!**/.env.example
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Editor settings
 .vscode/
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+htmlcov/

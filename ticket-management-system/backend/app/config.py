@@ -15,7 +15,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")]
 ADMIN_NAME = os.getenv("ADMIN_NAME", "Admin")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Admin@123")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
 if not DATABASE_URL or not JWT_SECRET_KEY:
     raise RuntimeError("DATABASE_URL and JWT_SECRET_KEY must be set in .env (see .env.example)")
+
+# Optional: Groq AI integration (the app works without it; only the AI panel needs it)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")

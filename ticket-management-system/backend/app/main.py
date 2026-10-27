@@ -6,7 +6,7 @@ from app import config
 from app.auth.security import hash_password
 from app.database.session import Base, SessionLocal, engine
 from app.models.models import Role, User
-from app.routers import auth, tickets, users
+from app.routers import ai, auth, tickets, users
 
 
 def seed_admin():
@@ -30,6 +30,7 @@ app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_cred
 app.include_router(auth.router)
 app.include_router(tickets.router)
 app.include_router(users.router)
+app.include_router(ai.router)
 
 
 @app.get("/api/health")
